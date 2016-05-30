@@ -1,5 +1,5 @@
 <?php
-
+# plugin hecho por KaitoDoDo
 namespace KaitoDoDo\HungerGames;
 
 use pocketmine\plugin\PluginBase;
@@ -91,8 +91,19 @@ class HungerGames extends PluginBase implements Listener {
 	
 	public function onDeath(PlayerDeathEvent $event){
         $jugador = $event->getEntity();
-		$level = $jugador->getLevel();
+	$level = $jugador->getLevel();
         $cause = $jugador->getLastDamageCause();
+        $spawn = $this->getServer()->getDefaultLevel()->getSafeSpawn();
+        $jugador->teleport($spawn,0,0);
+        $jugador->getInventory()->clearAll();
+	$jugador->removeAllEffects();
+        $statistic = new Config($this->getDataFolder() . "/statistic.yml", Config::YAML);
+	$stats = $statistic->get($jugador->getName());
+	$soFarPlayer = $stats[1];
+	$soFarPlayer++;
+	$stats[1] = $soFarPlayer;
+	$statistic->set($jugador->getName(),$stats);
+	$statistic->save();
         if(!($cause instanceof EntityDamageByEntityEvent)) return;
         $asassin = ($cause->getDamager() instanceof Player ? $cause->getDamager() : false);
 		if($asassin !== false) {
@@ -323,7 +334,7 @@ class HungerGames extends PluginBase implements Listener {
 				}
 			return true;
                         
-                        case "start":
+                        case "hgstart":
                             if($player->isOp())
 				{
                                 $player->sendMessage("§bInicio en 10 segundos...");
@@ -333,6 +344,23 @@ class HungerGames extends PluginBase implements Listener {
 		{
 			$config->set($arena . "PlayTime", 660);
 			$config->set($arena . "StartTime", 10);
+		}
+		$config->save();
+                                }
+                                else{
+                                    $player->sendMessage("§cNo eres OP");
+                                }
+                                return true;
+                         case "hgcf":
+                            if($player->isOp())
+				{
+                                $player->sendMessage("§bCF en 10 segundos...");
+                                $config = new Config($this->getDataFolder() . "/config.yml", Config::YAML);
+		$config->set("arenas",$this->arenas);
+		foreach($this->arenas as $arena)
+		{
+			$config->set($arena . "PlayTime", 190);
+			$config->set($arena . "StartTime", 0);
 		}
 		$config->save();
                                 }
@@ -390,6 +418,9 @@ class HungerGames extends PluginBase implements Listener {
 						$player->teleport($spawn,0,0);
 						$player->setNameTag($player->getName());
 						$player->getInventory()->clearAll();
+                                                $player->removeAllEffects();
+                                                $amount = 20;
+                                                $player->setHealth($amount);
                                                 $config2 = new Config($this->getDataFolder() . "/rank.yml", Config::YAML);
 						$rank = $config2->get($player->getName());
                                                 $p = $player->getName();
@@ -591,63 +622,73 @@ class GameSender extends PluginTask {
 											$toUse = $lang->get($playerlang->get($plpl->getName()));
 											$plpl->sendMessage($this->prefix . $pl->getName() . " " . $toUse["won"]);
 										}
-										$statistic = new Config($this->getDataFolder() . "/statistic.yml", Config::YAML);
-										$stats = $statistic->get($pl->getName());
-										$soFarPlayer = $stats[1];
-										$soFarPlayer++;
-										$stats[1] = $soFarPlayer;
-										$statistic->set($pl->getName(),$stats);
-										$statistic->save();
 										$pl->getInventory()->clearAll();
 										$pl->removeAllEffects();
 										$pl->setNameTag($pl->getName());
 										$spawn = $this->plugin->getServer()->getDefaultLevel()->getSafeSpawn();
-										$this->plugin->getServer()->getDefaultLevel()->loadChunk($spawn->getX(), $spawn->getZ());
+                                                                                $this->plugin->getServer()->getDefaultLevel()->loadChunk($spawn->getX(), $spawn->getZ());
 										$pl->teleport($spawn,0,0);
+                                                                                
 									}
 									$config->set($arena . "PlayTime", 660);
 									$config->set($arena . "StartTime", 180);
 								}
+                                                                if(($aop>=2)){
+                                                                    foreach($playersArena as $pl)
+                                                                        {$pl->sendTip("§7[§fH§cG§7]§cQuedan §b" . $aop . "§c jugadores.");
+                                                                        }
+                                                                }
 								$time--;
                                                                 if($time == 659)
 								{
 									foreach($playersArena as $pl)
 									{
-										$pl->sendMessage("§a§l--------------------------------");
-                                                                                $pl->sendMessage("§b§lTienes 30 segundos de Invencibilidad");
-                                                                                $pl->sendMessage("§a§l--------------------------------");
+										$pl->sendMessage("§e--------------------------------");
+                                                                                $pl->sendMessage("§aTienes 30 segundos de Invencibilidad");
+                                                                                $pl->sendMessage("§e--------------------------------");
 									}
 								}
                                                                 if($time == 645)
 								{
 									foreach($playersArena as $pl)
 									{
-										$pl->sendMessage("§a§l--------------------------------");
-                                                                                $pl->sendMessage("§b§lQuedan 15 segundos de Invencibilidad");
-                                                                                $pl->sendMessage("§a§l--------------------------------");
+										$pl->sendMessage("§e--------------------------------");
+                                                                                $pl->sendMessage("§aQuedan 15 segundos de Invencibilidad");
+                                                                                $pl->sendMessage("§e--------------------------------");
 									}
 								}
 								if($time == 630)
 								{
 									foreach($playersArena as $pl)
 									{
-										$pl->sendMessage("§a§l-------------------");
-                                                                                $pl->sendMessage("§b§lYa no eres Invencible");
-                                                                                $pl->sendMessage("§a§l-------------------");
+										$pl->sendMessage("§e-------------------");
+                                                                                $pl->sendMessage("§aYa no eres Invencible");
+                                                                                $pl->sendMessage("§e-------------------");
 									}
 								}
-								if($time == 420)
+                                                                if($time == 500)
 								{
 									foreach($playersArena as $pl)
 									{
+										$pl->sendMessage("§e--------------------------");
+                                                                                $pl->sendMessage("§aPlugin hecho por KaitoDoDoYT");
+                                                                                $pl->sendMessage("§e--------------------------");
+									}
+								}
+                                                                if($time == 420)
+								{
+									foreach($playersArena as $pl)
+									{
+										$pl->sendMessage("§e---------------------------");
+                                                                                $pl->sendMessage("§aLos cofres han sido rellenados");
+                                                                                $pl->sendMessage("§e---------------------------");
 										$playerlang = new Config($this->plugin->getDataFolder() . "/languages.yml", Config::YAML);
-										$lang = new Config($this->plugin->getDataFolder() . "/lang.yml", Config::YAML);
+                                                                                $lang = new Config($this->plugin->getDataFolder() . "/lang.yml", Config::YAML);
 										$toUse = $lang->get($playerlang->get($pl->getName()));
-										$pl->sendMessage("§a§l---------------------------");
-                                                                                $pl->sendMessage("§b§lLos cofres han sido rellenados");
-                                                                                $pl->sendMessage("§a§l---------------------------");
+										$pl->sendMessage($this->prefix . $toUse["chestrefill"]);
 									}
 									$this->refillChests($levelArena);
+									
 								}
 								if($time>=180)
 								{
@@ -658,18 +699,17 @@ class GameSender extends PluginTask {
 									foreach($playersArena as $pl)
 									{
 										$playerlang = new Config($this->plugin->getDataFolder() . "/languages.yml", Config::YAML);
-									$lang = new Config($this->plugin->getDataFolder() . "/lang.yml", Config::YAML);
+                                                                                $lang = new Config($this->plugin->getDataFolder() . "/lang.yml", Config::YAML);
 										$toUse = $lang->get($playerlang->get($pl->getName()));
 										$pl->sendMessage($this->prefix . $minutes . " " . $toUse["deathmatchminutes"]);
 									}
 								}
-								
 								else if($time2 == 30 || $time2 == 15 || $time2 == 10 || $time2 ==5 || $time2 ==4 || $time2 ==3 || $time2 ==2 || $time2 ==1)
 								{
 									foreach($playersArena as $pl)
 									{
 										$playerlang = new Config($this->plugin->getDataFolder() . "/languages.yml", Config::YAML);
-									$lang = new Config($this->plugin->getDataFolder() . "/lang.yml", Config::YAML);
+                                                                                $lang = new Config($this->plugin->getDataFolder() . "/lang.yml", Config::YAML);
 										$toUse = $lang->get($playerlang->get($pl->getName()));
 										$pl->sendMessage($this->prefix . $time2 . " " . $toUse["deathmatchseconds"]);
 									}
@@ -715,7 +755,7 @@ class GameSender extends PluginTask {
 										{
 											$pl->teleport($spawn,0,0);
 											$playerlang = new Config($this->plugin->getDataFolder() . "/languages.yml", Config::YAML);
-									$lang = new Config($this->plugin->getDataFolder() . "/lang.yml", Config::YAML);
+                                                                                        $lang = new Config($this->plugin->getDataFolder() . "/lang.yml", Config::YAML);
 											$toUse = $lang->get($playerlang->get($pl->getName()));
 											$pl->sendMessage($this->prefix . $toUse["nowinner"]);
 											$pl->getInventory()->clearAll();
@@ -735,17 +775,10 @@ class GameSender extends PluginTask {
 									foreach($this->plugin->getServer()->getOnlinePlayers() as $plpl)
 									{
 										$playerlang = new Config($this->plugin->getDataFolder() . "/languages.yml", Config::YAML);
-									$lang = new Config($this->plugin->getDataFolder() . "/lang.yml", Config::YAML);
+                                                                                $lang = new Config($this->plugin->getDataFolder() . "/lang.yml", Config::YAML);
 										$toUse = $lang->get($playerlang->get($plpl->getName()));
 										$plpl->sendMessage($this->prefix . $pl->getName() . " " . $toUse["won"]);
 									}
-									$statistic = new Config($this->plugin->getDataFolder() . "/statistic.yml", Config::YAML);
-									$stats = $statistic->get($pl->getName());
-									$soFarPlayer = $stats[1];
-									$soFarPlayer++;
-									$stats[1] = $soFarPlayer;
-									$statistic->set($pl->getName(),$stats);
-									$statistic->save();
 									$spawn = $this->plugin->getServer()->getDefaultLevel()->getSafeSpawn();
 									$this->plugin->getServer()->getDefaultLevel()->loadChunk($spawn->getX(), $spawn->getZ());
 									$pl->getInventory()->clearAll();
